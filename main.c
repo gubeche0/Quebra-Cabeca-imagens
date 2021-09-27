@@ -34,6 +34,7 @@ typedef struct
 void load(char *name, Img *pic);
 void valida();
 int cmp(const void *elem1, const void *elem2);
+int compararPixel(RGB *ref, RGB *pixel1, RGB *pixel2);
 
 // Funções da interface gráfica e OpenGL
 void init();
@@ -140,6 +141,20 @@ int main(int argc, char *argv[])
     }
     */
 
+    int pixel1, pixel2;
+    RGB pixel;
+    for (int v = 0; v < 1000; v++) {
+        for (int i = 0; i < tam; i++) {
+            pixel1 = rand() % tam;
+            pixel2 = rand() % tam;
+
+            if (compararPixel(&pic[DESEJ].img[pixel1], &pic[SAIDA].img[pixel1], &pic[SAIDA].img[pixel2]) == 1) {
+                pixel = pic[SAIDA].img[pixel1];
+                pic[SAIDA].img[pixel1] = pic[SAIDA].img[pixel2];
+                pic[SAIDA].img[pixel2] = pixel;
+            }
+        }
+    }
     // NÃO ALTERAR A PARTIR DAQUI!
 
     // Cria textura para a imagem de saída
@@ -149,6 +164,20 @@ int main(int argc, char *argv[])
 
     // Entra no loop de eventos, não retorna
     glutMainLoop();
+}
+
+int compararPixel(RGB *ref, RGB *pixel1, RGB *pixel2) {
+    
+
+    int valueRef = ref->r + ref->g + ref->b; // 10
+    int valueP1 = pixel1->r + pixel1->g + pixel1->b; // 8
+    int valueP2 = pixel2->r + pixel2->g + pixel2->b;  // 11
+
+    if (abs(valueRef - valueP1) >= abs(valueRef - valueP2)) {
+        return 1;
+    }
+
+    return 0;
 }
 
 // Carrega uma imagem para a struct Img
