@@ -34,7 +34,7 @@ typedef struct
 void load(char *name, Img *pic);
 void valida();
 int cmp(const void *elem1, const void *elem2);
-int compararPixel(RGB *ref, RGB *pixel1, RGB *pixel2);
+int compararPixel(RGB *ref1, RGB *ref2, RGB *pixel1, RGB *pixel2);
 
 // Funções da interface gráfica e OpenGL
 void init();
@@ -148,7 +148,7 @@ int main(int argc, char *argv[])
             pixel1 = rand() % tam;
             pixel2 = rand() % tam;
 
-            if (compararPixel(&pic[DESEJ].img[pixel1], &pic[SAIDA].img[pixel1], &pic[SAIDA].img[pixel2]) == 1) {
+            if (compararPixel(&pic[DESEJ].img[pixel1], &pic[DESEJ].img[pixel2], &pic[SAIDA].img[pixel1], &pic[SAIDA].img[pixel2]) == 1) {
                 pixel = pic[SAIDA].img[pixel1];
                 pic[SAIDA].img[pixel1] = pic[SAIDA].img[pixel2];
                 pic[SAIDA].img[pixel2] = pixel;
@@ -166,14 +166,16 @@ int main(int argc, char *argv[])
     glutMainLoop();
 }
 
-int compararPixel(RGB *ref, RGB *pixel1, RGB *pixel2) {
-    
-
-    int valueRef = ref->r + ref->g + ref->b; // 10
+int compararPixel(RGB *ref1, RGB *ref2, RGB *pixel1, RGB *pixel2) {
+    int valueRef1 = ref1->r + ref1->g + ref1->b; // 10
+    int valueRef2 = ref2->r + ref2->g + ref2->b; // 10
     int valueP1 = pixel1->r + pixel1->g + pixel1->b; // 8
     int valueP2 = pixel2->r + pixel2->g + pixel2->b;  // 11
 
-    if (abs(valueRef - valueP1) >= abs(valueRef - valueP2)) {
+    if (
+        abs(valueRef1 - valueP1) >= abs(valueRef1 - valueP2) 
+        && abs(valueRef2 - valueP1) <= abs(valueRef2 - valueP2)
+    ) {
         return 1;
     }
 
