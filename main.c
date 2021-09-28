@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h> // Para usar strings
 #include <time.h>
+#include <math.h>
 
 #ifdef WIN32
 #include <windows.h> // includes only in MSWindows not in UNIX
@@ -35,6 +36,7 @@ void load(char *name, Img *pic);
 void valida();
 int cmp(const void *elem1, const void *elem2);
 int compararPixel(RGB *ref1, RGB *ref2, RGB *pixel1, RGB *pixel2);
+int distanciaCor(RGB *e1, RGB *e2);
 
 // Funções da interface gráfica e OpenGL
 void init();
@@ -143,16 +145,23 @@ int main(int argc, char *argv[])
 
     int pixel1, pixel2;
     RGB pixel;
-    for (int v = 0; v < 1000; v++) {
+    int trocar, x = 0;
+    // qsort(pic[DESEJ].img, tam, sizeof(RGB), cmp);
+
+    for (int v = 0; v < 10000; v++) {
         for (int i = 0; i < tam; i++) {
             pixel1 = rand() % tam;
-            pixel2 = rand() % tam;
-
-            if (compararPixel(&pic[DESEJ].img[pixel1], &pic[DESEJ].img[pixel2], &pic[SAIDA].img[pixel1], &pic[SAIDA].img[pixel2]) == 1) {
-                pixel = pic[SAIDA].img[pixel1];
-                pic[SAIDA].img[pixel1] = pic[SAIDA].img[pixel2];
-                pic[SAIDA].img[pixel2] = pixel;
-            }
+            // pixel1 = i;
+            // for (int t = 0; t < tam; t++) {
+                pixel2 = rand() % tam;
+                // x++;
+                if (compararPixel(&pic[DESEJ].img[pixel1], &pic[DESEJ].img[pixel2], &pic[SAIDA].img[pixel1], &pic[SAIDA].img[pixel2]) == 1) {
+                    pixel = pic[SAIDA].img[pixel1];
+                    pic[SAIDA].img[pixel1] = pic[SAIDA].img[pixel2];
+                    pic[SAIDA].img[pixel2] = pixel;
+                    // break;
+                }
+            // }
         }
     }
     // NÃO ALTERAR A PARTIR DAQUI!
@@ -167,19 +176,28 @@ int main(int argc, char *argv[])
 }
 
 int compararPixel(RGB *ref1, RGB *ref2, RGB *pixel1, RGB *pixel2) {
-    int valueRef1 = ref1->r + ref1->g + ref1->b; // 10
-    int valueRef2 = ref2->r + ref2->g + ref2->b; // 10
-    int valueP1 = pixel1->r + pixel1->g + pixel1->b; // 8
-    int valueP2 = pixel2->r + pixel2->g + pixel2->b;  // 11
+    // int valueRef1 = ref1->r + ref1->g + ref1->b; // 10
+    // int valueRef2 = ref2->r + ref2->g + ref2->b; // 10
+    // int valueP1 = pixel1->r + pixel1->g + pixel1->b; // 8
+    // int valueP2 = pixel2->r + pixel2->g + pixel2->b;  // 11
 
     if (
-        abs(valueRef1 - valueP1) >= abs(valueRef1 - valueP2) 
-        && abs(valueRef2 - valueP1) <= abs(valueRef2 - valueP2)
+        distanciaCor(ref1, pixel1) <=  distanciaCor(ref1, pixel2)
+        && distanciaCor(ref2, pixel1) >= distanciaCor(ref2, pixel2)
     ) {
         return 1;
     }
 
     return 0;
+}
+
+int distanciaCor(RGB *e1, RGB *e2) {
+    long rmean = ( e1->r + e2->r ) / 2;
+    long r = e1->r - e2->r;
+    long g = e1->g - e2->g;
+    long b = e1->b - e2->b;
+    // return sqrt((((512+rmean)*r*r)>>8) + 4*g*g + (((767-rmean)*b*b)>>8));
+    return sqrt(r*r + g*g + b*b);
 }
 
 // Carrega uma imagem para a struct Img
