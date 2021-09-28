@@ -143,30 +143,31 @@ int main(int argc, char *argv[])
 
     int pixel1, pixel2, tentativas = 0;
     RGB pixel;
-    int continuar = 1;
-    while (tentativas < 1000) {
-        continuar = 0;
-        for (int i = 0; i < tam; i++) {
-        // for (int i = 0; i < 1000; i++) {
-            // pixel1 = rand() % tam;
-            pixel1 = i;
-            tentativas = 0;
 
-            while (tentativas < 1000) {
-                pixel2 = rand() % tam;
 
-                if (compararPixel(&pic[DESEJ].img[pixel1], &pic[DESEJ].img[pixel2], &pic[SAIDA].img[pixel1], &pic[SAIDA].img[pixel2]) == 1) {
-                    pixel = pic[SAIDA].img[pixel1];
-                    pic[SAIDA].img[pixel1] = pic[SAIDA].img[pixel2];
-                    pic[SAIDA].img[pixel2] = pixel;
-                    continuar = 1;
-                    tentativas = 1;
-                    // tentativas++;
-                    // break;
-                } else {
-                    tentativas++;
-                }
-            }            
+    // Primeiro embaralha os pixels para caso não encontre mais trocas vantajosos
+    // não ficar com os pixels da imagem original visível.
+    for (int i = 0; i < tam; i++) {
+        pixel1 = i;
+        pixel2 = rand() % tam;
+
+        pixel = pic[SAIDA].img[pixel1];
+        pic[SAIDA].img[pixel1] = pic[SAIDA].img[pixel2];
+        pic[SAIDA].img[pixel2] = pixel;        
+    }
+    
+    // Realiza as trocas até que demore 10000 tentativas para encontrar uma troca vantajoso
+    while (tentativas < 10000) {
+        pixel1 = rand() % tam;
+        pixel2 = rand() % tam;
+
+        if (compararPixel(&pic[DESEJ].img[pixel1], &pic[DESEJ].img[pixel2], &pic[SAIDA].img[pixel1], &pic[SAIDA].img[pixel2]) == 1) {
+                pixel = pic[SAIDA].img[pixel1];
+                pic[SAIDA].img[pixel1] = pic[SAIDA].img[pixel2];
+                pic[SAIDA].img[pixel2] = pixel;
+                tentativas = 0;
+        } else {
+            tentativas++;
         }
     }
     // NÃO ALTERAR A PARTIR DAQUI!
@@ -180,15 +181,16 @@ int main(int argc, char *argv[])
     glutMainLoop();
 }
 
+// Compara se a troca é vantajoso para ambas as posições
 int compararPixel(RGB *ref1, RGB *ref2, RGB *pixel1, RGB *pixel2) {
-    int valueRef1 = ref1->r + ref1->g + ref1->b; // 10
-    int valueRef2 = ref2->r + ref2->g + ref2->b; // 10
-    int valueP1 = pixel1->r + pixel1->g + pixel1->b; // 8
-    int valueP2 = pixel2->r + pixel2->g + pixel2->b;  // 11
+    int valueRef1 = ref1->r + ref1->g + ref1->b;
+    int valueRef2 = ref2->r + ref2->g + ref2->b;
+    int valueP1 = pixel1->r + pixel1->g + pixel1->b;
+    int valueP2 = pixel2->r + pixel2->g + pixel2->b;
 
     if (
-        abs(valueRef1 - valueP1) >= abs(valueRef1 - valueP2) 
-        && abs(valueRef2 - valueP1) <= abs(valueRef2 - valueP2)
+        abs(valueRef1 - valueP1) > abs(valueRef1 - valueP2) 
+        && abs(valueRef2 - valueP1) < abs(valueRef2 - valueP2)
     ) {
         return 1;
     }
