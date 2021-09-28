@@ -141,18 +141,32 @@ int main(int argc, char *argv[])
     }
     */
 
-    int pixel1, pixel2;
+    int pixel1, pixel2, tentativas = 0;
     RGB pixel;
-    for (int v = 0; v < 1000; v++) {
+    int continuar = 1;
+    while (tentativas < 1000) {
+        continuar = 0;
         for (int i = 0; i < tam; i++) {
-            pixel1 = rand() % tam;
-            pixel2 = rand() % tam;
+        // for (int i = 0; i < 1000; i++) {
+            // pixel1 = rand() % tam;
+            pixel1 = i;
+            tentativas = 0;
 
-            if (compararPixel(&pic[DESEJ].img[pixel1], &pic[DESEJ].img[pixel2], &pic[SAIDA].img[pixel1], &pic[SAIDA].img[pixel2]) == 1) {
-                pixel = pic[SAIDA].img[pixel1];
-                pic[SAIDA].img[pixel1] = pic[SAIDA].img[pixel2];
-                pic[SAIDA].img[pixel2] = pixel;
-            }
+            while (tentativas < 1000) {
+                pixel2 = rand() % tam;
+
+                if (compararPixel(&pic[DESEJ].img[pixel1], &pic[DESEJ].img[pixel2], &pic[SAIDA].img[pixel1], &pic[SAIDA].img[pixel2]) == 1) {
+                    pixel = pic[SAIDA].img[pixel1];
+                    pic[SAIDA].img[pixel1] = pic[SAIDA].img[pixel2];
+                    pic[SAIDA].img[pixel2] = pixel;
+                    continuar = 1;
+                    tentativas = 1;
+                    // tentativas++;
+                    // break;
+                } else {
+                    tentativas++;
+                }
+            }            
         }
     }
     // NÃO ALTERAR A PARTIR DAQUI!
