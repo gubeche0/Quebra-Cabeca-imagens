@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
 
     int pixel1, pixel2, tentativas = 0;
     RGB pixel;
-
+    long trocas = 0;
 
     // Primeiro embaralha os pixels para caso não encontre mais trocas vantajosos
     // não ficar com os pixels da imagem original visível.
@@ -155,21 +155,29 @@ int main(int argc, char *argv[])
         pic[SAIDA].img[pixel1] = pic[SAIDA].img[pixel2];
         pic[SAIDA].img[pixel2] = pixel;        
     }
-    
-    // Realiza as trocas até que demore 10000 tentativas para encontrar uma troca vantajoso
-    while (tentativas < 10000) {
-        pixel1 = rand() % tam;
-        pixel2 = rand() % tam;
 
-        if (compararPixel(&pic[DESEJ].img[pixel1], &pic[DESEJ].img[pixel2], &pic[SAIDA].img[pixel1], &pic[SAIDA].img[pixel2]) == 1) {
-                pixel = pic[SAIDA].img[pixel1];
-                pic[SAIDA].img[pixel1] = pic[SAIDA].img[pixel2];
-                pic[SAIDA].img[pixel2] = pixel;
-                tentativas = 0;
-        } else {
-            tentativas++;
-        }
+    for (int x = 0; x < 2; x++) {
+        for (int l = 0; l < tam; l++) {
+            pixel1 = l;
+            trocas = 0;
+            for (int c = tam; c > 0 ; c--) {
+                pixel2 = c;
+                // tentativas++;
+
+                if (compararPixel(&pic[DESEJ].img[pixel1], &pic[DESEJ].img[pixel2], &pic[SAIDA].img[pixel1], &pic[SAIDA].img[pixel2]) == 1) {
+                    pixel = pic[SAIDA].img[pixel1];
+                    pic[SAIDA].img[pixel1] = pic[SAIDA].img[pixel2];
+                    pic[SAIDA].img[pixel2] = pixel;
+                    // tentativas = 0;
+                    trocas++;
+                }
+            }
+        } 
+        // printf("Concluido! trocas: %d", tentativas);
     }
+    
+
+    
     // NÃO ALTERAR A PARTIR DAQUI!
 
     // Cria textura para a imagem de saída
