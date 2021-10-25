@@ -183,15 +183,27 @@ int main(int argc, char *argv[])
 
 // Compara se a troca é vantajoso para ambas as posições
 int compararPixel(RGB *ref1, RGB *ref2, RGB *pixel1, RGB *pixel2) {
-    int valueRef1 = ref1->r + ref1->g + ref1->b;
-    int valueRef2 = ref2->r + ref2->g + ref2->b;
-    int valueP1 = pixel1->r + pixel1->g + pixel1->b;
-    int valueP2 = pixel2->r + pixel2->g + pixel2->b;
+    int valueP1Red = abs(ref1->r - pixel1->r);
+    int valueP1Blue = abs(ref1->b - pixel1->b);
+    int valueP1Green = abs(ref1->g - pixel1->g);
+    int difRef1P1 = valueP1Red + valueP1Blue + valueP1Green;
 
-    if (
-        abs(valueRef1 - valueP1) > abs(valueRef1 - valueP2) 
-        && abs(valueRef2 - valueP1) < abs(valueRef2 - valueP2)
-    ) {
+    int valueP2Red = abs(ref1->r - pixel2->r);
+    int valueP2Blue = abs(ref1->b - pixel2->b);
+    int valueP2Green = abs(ref1->g - pixel2->g);
+    int difRef1P2 = valueP2Red + valueP2Blue + valueP2Green;
+
+    int ref2valueP1Red = abs(ref2->r - pixel1->r);
+    int ref2valueP1Blue = abs(ref2->b - pixel1->b);
+    int ref2valueP1Green = abs(ref2->g - pixel1->g);
+    int difRef2P1 = ref2valueP1Red + ref2valueP1Blue + ref2valueP1Green;
+
+    int ref2valueP2Red = abs(ref2->r - pixel2->r);
+    int ref2valueP2Blue = abs(ref2->b - pixel2->b);
+    int ref2valueP2Green = abs(ref2->g - pixel2->g);
+    int difRef2P2 = ref2valueP2Red + ref2valueP2Blue + ref2valueP2Green;
+
+    if (difRef1P2 < difRef1P1 && difRef2P1 < difRef2P2) {
         return 1;
     }
 
