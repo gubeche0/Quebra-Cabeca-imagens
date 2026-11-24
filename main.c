@@ -40,6 +40,18 @@ int compararPixel(RGB *ref1, RGB *ref2, RGB *pixel1, RGB *pixel2);
 void init();
 void draw();
 void keyboard(unsigned char key, int x, int y);
+void atualizar(int value);
+
+// Controle do processamento em tempo real
+#define MAX_TENTATIVAS 10000
+#define TROCAS_POR_FRAME 2500
+#define PASSOS_POR_FRAME 100000
+#define INTERVALO_FRAME_MS 16
+
+int tam;
+int tentativas = 0;
+long totalTrocas = 0;
+int processando = 1;
 
 // Largura e altura da janela
 int width, height;
@@ -102,13 +114,14 @@ int main(int argc, char *argv[])
     glutKeyboardFunc(keyboard);
 
     // Cria texturas em memória a partir dos pixels das imagens
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     tex[ORIGEM] = SOIL_create_OGL_texture((unsigned char *)pic[ORIGEM].img, pic[ORIGEM].width, pic[ORIGEM].height, SOIL_LOAD_RGB, SOIL_CREATE_NEW_ID, 0);
     tex[DESEJ] = SOIL_create_OGL_texture((unsigned char *)pic[DESEJ].img, pic[DESEJ].width, pic[DESEJ].height, SOIL_LOAD_RGB, SOIL_CREATE_NEW_ID, 0);
 
     // Exibe as dimensões na tela, para conferência
     printf("Origem   : %s %d x %d\n", argv[1], pic[ORIGEM].width, pic[ORIGEM].height);
     printf("Desejada : %s %d x %d\n", argv[2], pic[DESEJ].width, pic[DESEJ].height);
-    sel = ORIGEM; // pic1
+    sel = SAIDA; // Inicia exibindo a imagem em formação
 
     // Define a janela de visualizacao 2D
     glMatrixMode(GL_PROJECTION);
@@ -121,52 +134,74 @@ int main(int argc, char *argv[])
 
     // Copia imagem de origem na imagem de saída
     // (NUNCA ALTERAR A IMAGEM DE ORIGEM NEM DESEJADA)
-    int tam = pic[ORIGEM].width * pic[ORIGEM].height;
+    tam = pic[ORIGEM].width * pic[ORIGEM].height;
     memcpy(pic[SAIDA].img, pic[ORIGEM].img, sizeof(RGB) * tam);
 
-    //
-    // Neste ponto, voce deve implementar o algoritmo!
-    // (ou chamar funcoes para fazer isso)
-    //
-    // Aplica o algoritmo e gera a saida em pic[SAIDA].img...
-    // ...
-    // ...
-    //
-    // Exemplo de manipulação: inverte as cores na imagem de saída
-    /*
-	for(int i=0; i<tam; i++) {
-        pic[SAIDA].img[i].r = 255 - pic[SAIDA].img[i].r;
-        pic[SAIDA].img[i].g = 255 - pic[SAIDA].img[i].g;
-        pic[SAIDA].img[i].b = 255 - pic[SAIDA].img[i].b;
-    }
-    */
-
-    int pixel1, pixel2, tentativas = 0;
-    RGB pixel;
-
-    // Realiza as trocas até que demore 10000 tentativas para encontrar uma troca vantajoso
-    while (tentativas < 10000) {
-        pixel1 = rand() % tam;
-        pixel2 = rand() % tam;
-
-        if (compararPixel(&pic[DESEJ].img[pixel1], &pic[DESEJ].img[pixel2], &pic[SAIDA].img[pixel1], &pic[SAIDA].img[pixel2]) == 1) {
-                pixel = pic[SAIDA].img[pixel1];
-                pic[SAIDA].img[pixel1] = pic[SAIDA].img[pixel2];
-                pic[SAIDA].img[pixel2] = pixel;
-                tentativas = 0;
-        } else {
-            tentativas++;
-        }
-    }
-    // NÃO ALTERAR A PARTIR DAQUI!
-
-    // Cria textura para a imagem de saída
+    // Cria textura inicial da imagem de saída (começa igual à imagem de origem)
     tex[SAIDA] = SOIL_create_OGL_texture((unsigned char *)pic[SAIDA].img, pic[SAIDA].width, pic[SAIDA].height, SOIL_LOAD_RGB, SOIL_CREATE_NEW_ID, 0);
-    // Grava imagem de saída em out.bmp, para conferência
-    SOIL_save_image("out.bmp", SOIL_SAVE_TYPE_BMP, pic[SAIDA].width, pic[SAIDA].height, 3, (const unsigned char *)pic[SAIDA].img);
+
+    // Agenda o processamento incremental para exibir as trocas em tempo real
+    glutTimerFunc(300, atualizar, 0);
 
     // Entra no loop de eventos, não retorna
     glutMainLoop();
+}
+
+// Executa um lote de trocas por frame e atualiza a textura na tela em tempo real
+void atualizar(int value)
+{
+    (void)value;
+    if (!processando)
+        return;
+
+    int trocasNoFrame = 0;
+    int passosNoFrame = 0;
+
+    while (tentativas < MAX_TENTATIVAS &&
+           trocasNoFrame < TROCAS_POR_FRAME &&
+           passosNoFrame < PASSOS_POR_FRAME)
+    {
+        int pixel1 = rand() % tam;
+        int pixel2 = rand() % tam;
+
+        if (compararPixel(&pic[DESEJ].img[pixel1], &pic[DESEJ].img[pixel2],
+                          &pic[SAIDA].img[pixel1], &pic[SAIDA].img[pixel2]) == 1)
+        {
+            RGB pixel = pic[SAIDA].img[pixel1];
+            pic[SAIDA].img[pixel1] = pic[SAIDA].img[pixel2];
+            pic[SAIDA].img[pixel2] = pixel;
+            tentativas = 0;
+            trocasNoFrame++;
+            totalTrocas++;
+        }
+        else
+        {
+            tentativas++;
+        }
+        passosNoFrame++;
+    }
+
+    // Atualiza a textura de saída na GPU com as trocas realizadas neste frame
+    if (trocasNoFrame > 0)
+    {
+        glBindTexture(GL_TEXTURE_2D, tex[SAIDA]);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, pic[SAIDA].width, pic[SAIDA].height,
+                        GL_RGB, GL_UNSIGNED_BYTE, pic[SAIDA].img);
+        glutPostRedisplay();
+    }
+
+    if (tentativas >= MAX_TENTATIVAS)
+    {
+        processando = 0;
+        // Grava imagem de saída final em out.bmp, para conferência
+        SOIL_save_image("out.bmp", SOIL_SAVE_TYPE_BMP, pic[SAIDA].width, pic[SAIDA].height, 3,
+                        (const unsigned char *)pic[SAIDA].img);
+        printf("Concluido! (%ld trocas realizadas)\n", totalTrocas);
+        glutPostRedisplay();
+        return;
+    }
+
+    glutTimerFunc(INTERVALO_FRAME_MS, atualizar, 0);
 }
 
 // Calcula a distância Euclidiana ao quadrado (L2²) entre duas cores RGB
