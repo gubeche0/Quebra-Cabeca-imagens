@@ -144,18 +144,6 @@ int main(int argc, char *argv[])
     int pixel1, pixel2, tentativas = 0;
     RGB pixel;
 
-
-    // Primeiro embaralha os pixels para caso não encontre mais trocas vantajosos
-    // não ficar com os pixels da imagem original visível.
-    for (int i = 0; i < tam; i++) {
-        pixel1 = i;
-        pixel2 = rand() % tam;
-
-        pixel = pic[SAIDA].img[pixel1];
-        pic[SAIDA].img[pixel1] = pic[SAIDA].img[pixel2];
-        pic[SAIDA].img[pixel2] = pixel;        
-    }
-    
     // Realiza as trocas até que demore 10000 tentativas para encontrar uma troca vantajoso
     while (tentativas < 10000) {
         pixel1 = rand() % tam;
