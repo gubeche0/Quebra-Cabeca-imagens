@@ -181,29 +181,20 @@ int main(int argc, char *argv[])
     glutMainLoop();
 }
 
-// Compara se a troca é vantajoso para ambas as posições
+// Calcula a distância Euclidiana ao quadrado (L2²) entre duas cores RGB
+static int distRGB2(const RGB *a, const RGB *b) {
+    int dr = (int)a->r - (int)b->r;
+    int dg = (int)a->g - (int)b->g;
+    int db = (int)a->b - (int)b->b;
+    return dr * dr + dg * dg + db * db;
+}
+
+// Compara se a troca reduz o erro total das duas posições
 int compararPixel(RGB *ref1, RGB *ref2, RGB *pixel1, RGB *pixel2) {
-    int valueP1Red = abs(ref1->r - pixel1->r);
-    int valueP1Blue = abs(ref1->b - pixel1->b);
-    int valueP1Green = abs(ref1->g - pixel1->g);
-    int difRef1P1 = valueP1Red + valueP1Blue + valueP1Green;
+    int erroAntes = distRGB2(ref1, pixel1) + distRGB2(ref2, pixel2);
+    int erroDepois = distRGB2(ref1, pixel2) + distRGB2(ref2, pixel1);
 
-    int valueP2Red = abs(ref1->r - pixel2->r);
-    int valueP2Blue = abs(ref1->b - pixel2->b);
-    int valueP2Green = abs(ref1->g - pixel2->g);
-    int difRef1P2 = valueP2Red + valueP2Blue + valueP2Green;
-
-    int ref2valueP1Red = abs(ref2->r - pixel1->r);
-    int ref2valueP1Blue = abs(ref2->b - pixel1->b);
-    int ref2valueP1Green = abs(ref2->g - pixel1->g);
-    int difRef2P1 = ref2valueP1Red + ref2valueP1Blue + ref2valueP1Green;
-
-    int ref2valueP2Red = abs(ref2->r - pixel2->r);
-    int ref2valueP2Blue = abs(ref2->b - pixel2->b);
-    int ref2valueP2Green = abs(ref2->g - pixel2->g);
-    int difRef2P2 = ref2valueP2Red + ref2valueP2Blue + ref2valueP2Green;
-
-    if (difRef1P2 < difRef1P1 && difRef2P1 < difRef2P2) {
+    if (erroDepois < erroAntes) {
         return 1;
     }
 
